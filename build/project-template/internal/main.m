@@ -32,6 +32,24 @@ int main(int argc, char *argv[]) {
                 [TNSRuntimeInspector setLogsToSystemConsole:YES];
                 return (id)nil;
               }];
+#else
+          BOOL logsEnabled = NO;
+          NSString* packageJsonPath = [applicationPath stringByAppendingPathComponent:@"app/package.json"];
+          NSData* data = [NSData dataWithContentsOfFile:packageJsonPath];
+          if (data) {
+            NSError* error = nil;
+            id packageJson = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
+            if (!error) {
+              if (packageJson[@"ios"] != nil && packageJson[@"ios"][@"forceLog"] != nil) {
+                logsEnabled = packageJson[@"ios"][@"forceLog"];
+              } else if (packageJson[@"forceLog"] != nil) {
+                logsEnabled = packageJson[@"forceLog"];
+              }
+            }
+          }
+          if (logsEnabled) {
+            [TNSRuntimeInspector setLogsToSystemConsole:logsEnabled];
+          }
 #endif
 
           extern char startOfMetadataSection __asm(
